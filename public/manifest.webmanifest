@@ -1,0 +1,20 @@
+{
+  "name": "答题台 · Reading Gym",
+  "short_name": "答题台",
+  "description": "逐句精读的本地优先答题台：切句、切块、标类型、写骨架。",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f6f5f1",
+  "theme_color": "#f6f5f1",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
