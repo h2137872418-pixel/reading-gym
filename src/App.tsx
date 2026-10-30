@@ -22,7 +22,7 @@ function useHashRoute() {
 
 export default function App() {
   const route = useHashRoute();
-  const sessionMatch = route.match(/^\/session\/(.+)$/);
+  const sessionMatch = route.match(/^\/session\/([^/]+)(?:\/([^/]+))?$/);
   const page = sessionMatch ? "session" : route === "/history" ? "history" : route === "/settings" ? "settings" : "today";
 
   return (
@@ -46,7 +46,12 @@ export default function App() {
         </header>
 
         <main className={page === "session" ? "page wide" : "page"}>
-          {page === "session" && sessionMatch && <Session date={decodeURIComponent(sessionMatch[1])} />}
+          {page === "session" && sessionMatch && (
+            <Session
+              date={decodeURIComponent(sessionMatch[1])}
+              passageId={sessionMatch[2] ? decodeURIComponent(sessionMatch[2]) : undefined}
+            />
+          )}
           {page === "today" && <Today />}
           {page === "history" && <History />}
           {page === "settings" && <SettingsPage />}

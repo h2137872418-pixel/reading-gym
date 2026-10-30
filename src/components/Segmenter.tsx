@@ -60,26 +60,33 @@ export default function Segmenter({ text, cuts, onChange, onFreeze }: Props) {
       </div>
 
       <div className="sentence" style={{ lineHeight: 2.2 }}>
-        {pieces.map((piece, index) => (
-          <span key={piece.start}>
-            {index > 0 && (
-              <>
-                <button
-                  type="button"
-                  className={`gap ${isWideGap(text, piece.start) ? "wide" : "tight"} ${
-                    cutSet.has(piece.start) ? "cut" : ""
-                  }`}
-                  aria-label="句子边界"
-                  onClick={() => onChange(toggleCut(cuts, piece.start, text.length))}
-                >
-                  {cutSet.has(piece.start) && <span className="mark">¶</span>}
-                </button>
-                {lineBreaks && cutSet.has(piece.start) && <br />}
-              </>
-            )}
-            <span className="tok">{piece.text.replace(/\s+$/, "")}</span>
-          </span>
-        ))}
+        {pieces.map((piece, index) => {
+          const paraBefore = index > 0 && /\n\s*\n\s*$/.test(pieces[index - 1].text);
+          return (
+            <span key={piece.start}>
+              {index > 0 && (
+                <>
+                  <button
+                    type="button"
+                    className={`gap ${isWideGap(text, piece.start) ? "wide" : "tight"} ${
+                      cutSet.has(piece.start) ? "cut" : ""
+                    }`}
+                    aria-label="句子边界"
+                    onClick={() => onChange(toggleCut(cuts, piece.start, text.length))}
+                  >
+                    {cutSet.has(piece.start) && <span className="mark">¶</span>}
+                  </button>
+                  {paraBefore ? (
+                    <br />
+                  ) : (
+                    lineBreaks && cutSet.has(piece.start) && <br />
+                  )}
+                </>
+              )}
+              <span className="tok">{piece.text.replace(/\s+$/, "")}</span>
+            </span>
+          );
+        })}
       </div>
 
       <div className="sub">

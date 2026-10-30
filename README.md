@@ -38,6 +38,14 @@ npm run preview      # http://localhost:4173
 4. **导出 answer**：下载 `YYYY-MM-DD.json`，拖进 `shared/answers/`。
 5. **导入批改**：coach 产出 review JSON 后导入，错句直接高亮，可「只看错句」。
 
+## 贴一段原文就能开始
+
+「今日 → 粘贴原文」：粘进正文，可选填目标词，应用会自己生成 task JSON 并打开。
+
+- 同一天可以多次粘贴，自动编号 `P1、P2…`，不会覆盖已有内容。
+- 粘贴的文本会自动清洗：PDF 的硬换行合并成段落，空行保留为分段，CRLF / 不换行空格 / 零宽字符一并清掉。
+- 已有 JSON 的话仍可「导入 JSON」或直接拖文件。
+
 ## 手机使用
 
 ```powershell

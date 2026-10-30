@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { invariants, parseReview, parseTask, validateAnswer } from "../src/schema";
 import { freezePassage, newSession, progressOf, reconcileSkeleton, toAnswerDoc } from "../src/lib/session";
 import { visibleSkeletonRows } from "../src/lib/skeleton";
-import { chunkRanges, chunksOf, gapPositions, toggleCut } from "../src/lib/text";
+import { chunkRanges, chunksOf, gapPositions, normalizeProse, toggleCut } from "../src/lib/text";
 import { answerToMarkdown } from "../src/lib/export";
 import type { LocalSentence, Task } from "../src/types";
 
@@ -143,6 +143,23 @@ const twoChunk: LocalSentence = {
   ],
 };
 check("仍有未标块时保留主句行", visibleSkeletonRows(twoChunk).length === 2);
+
+const wrapped = "Sarcasm and jazz have\nsomething surprisingly\nin common.\n\nMost frequently,\nsarcasm highlights\nan irritation.\r\n\r\nIf you want to be\nhappier, cut it out.";
+const normalized = normalizeProse(wrapped);
+check("硬换行合并成一段", normalized.split("\n\n").length === 3, normalized);
+check("段内不再有换行", !normalized.split("\n\n").some((block) => block.includes("\n")), normalized);
+check("CRLF 归一", !normalized.includes("\r"));
+check(
+  "多空格压缩",
+  normalizeProse("a   b\t\tc") === "a b c",
+  normalizeProse("a   b\t\tc"),
+);
+check(
+  "NBSP 与零宽字符清理",
+  normalizeProse("a\u00a0b\u200bc") === "a b c",
+  JSON.stringify(normalizeProse("a\u00a0b\u200bc")),
+);
+check("纯空白输入为空", normalizeProse(" \n\n\t ").trim() === "");
 
 console.log(failures === 0 ? "\n全部通过" : `\n${failures} 项失败`);
 process.exit(failures === 0 ? 0 : 1);

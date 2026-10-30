@@ -22,7 +22,7 @@ function readWal(date: string): SessionDoc | null {
   }
 }
 
-export default function Session({ date }: { date: string }) {
+export default function Session({ date, passageId }: { date: string; passageId?: string }) {
   const toast = useToast();
   const [task, setTask] = useState<Task | null>(null);
   const [session, setSession] = useState<SessionDoc | null>(null);
@@ -69,15 +69,18 @@ export default function Session({ date }: { date: string }) {
           installHintDismissed: false,
         },
       );
+      const requested = passageId
+        ? loaded.passages.findIndex((passage) => passage.passage_id === passageId)
+        : -1;
       const firstOpen = loaded.passages.findIndex(
         (passage) => !passage.frozen || passage.sentences.some((sentence) => !isStarted(sentence)),
       );
-      setPassageIndex(firstOpen >= 0 ? firstOpen : 0);
+      setPassageIndex(requested >= 0 ? requested : firstOpen >= 0 ? firstOpen : 0);
     })();
     return () => {
       cancelled = true;
     };
-  }, [date]);
+  }, [date, passageId]);
 
   useEffect(() => {
     latest.current = session;

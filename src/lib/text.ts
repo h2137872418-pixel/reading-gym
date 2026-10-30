@@ -101,3 +101,21 @@ function escapeRegExp(value: string): string {
 export function wordCount(text: string): number {
   return (text.match(/[A-Za-z][A-Za-z'\u2019-]*/g) ?? []).length;
 }
+
+export function normalizeProse(raw: string): string {
+  const cleaned = raw
+    .replace(/\r\n?/g, "\n")
+    .replace(/[\u00a0\u2000-\u200b\u202f\u205f\ufeff]/g, " ");
+
+  return cleaned
+    .split(/\n\s*\n+/)
+    .map((block) =>
+      block
+        .split("\n")
+        .map((line) => line.replace(/[ \t]+/g, " ").trim())
+        .filter(Boolean)
+        .join(" "),
+    )
+    .filter(Boolean)
+    .join("\n\n");
+}
