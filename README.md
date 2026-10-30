@@ -1,6 +1,22 @@
 # 答题台 PWA
 
+**线上地址：<https://h2137872418-pixel.github.io/reading-gym/>**
+
+手机用 Chrome / Safari 打开，再「添加到主屏幕」，就是全屏的独立应用，断网也能用。
+
 逐句精读的本地优先作答台。设计定稿见 `../../project_meta/answer_card/DESIGN.md`，与团队侧的 JSON 契约见 `../../project_meta/answer_card/CONTRACT.md`。
+
+## 部署
+
+推到 `main` 就会触发 GitHub Actions 自动构建并发布到 GitHub Pages（`.github/workflows/deploy.yml`）。
+
+```powershell
+git add -A
+git commit -m "..."
+git push
+```
+
+`public/samples/` 被 `.gitignore` 排除，不会进入公开仓库，也不会进入线上构建。
 
 ## 跑起来
 
