@@ -36,6 +36,7 @@ export default function Session({ date, passageId }: { date: string; passageId?:
   const [phase, setPhase] = useState<Phase>("segment");
   const [menuOpen, setMenuOpen] = useState(false);
   const [processOpen, setProcessOpen] = useState(false);
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
   const reviewInput = useRef<HTMLInputElement>(null);
   const latest = useRef<SessionDoc | null>(null);
@@ -220,6 +221,19 @@ export default function Session({ date, passageId }: { date: string; passageId?:
   );
 
   const sentences = passageState?.sentences ?? [];
+  const evidenceEntries = useMemo(() => {
+    if (!session) return [];
+    return session.passages.flatMap((passage) =>
+      passage.sentences
+        .filter((sentence) => sentence.evidence.trim().length > 0)
+        .map((sentence) => ({
+          passage_id: passage.passage_id,
+          sentence_id: sentence.sentence_id,
+          text: sentence.text.trim(),
+          evidence: sentence.evidence.trim(),
+        })),
+    );
+  }, [session]);
   const visibleSentences = useMemo(() => {
     if (!onlyErrors) return sentences;
     const filtered = sentences.filter((sentence) => {
@@ -393,6 +407,9 @@ export default function Session({ date, passageId }: { date: string; passageId?:
               title="导入 coach 的 review JSON"
             >
               导入批改
+            </button>
+            <button type="button" className="btn small ghost" onClick={() => setEvidenceOpen(true)}>
+              依据汇总
             </button>
             <button type="button" className="btn small" onClick={() => exportAnswer()}>
               导出 answer
@@ -585,6 +602,31 @@ export default function Session({ date, passageId }: { date: string; passageId?:
               提交并导出
             </button>
           </div>
+        </Dialog>
+      )}
+
+      {evidenceOpen && (
+        <Dialog title="全部依据 / 疑问" onClose={() => setEvidenceOpen(false)}>
+          <div className="sub">这里是只读汇总，编号按出现顺序；修改请回到对应句子。</div>
+          {evidenceEntries.length === 0 ? (
+            <div className="sub">还没有填写依据/疑问。每句的输入框只记当前句；这里会把所有已填的按编号汇总。</div>
+          ) : (
+            <ol style={{ paddingLeft: 20, lineHeight: 1.8 }}>
+              {evidenceEntries.map((entry, index) => (
+                <li key={entry.sentence_id} style={{ marginBottom: 8 }}>
+                  <span className="mono">#{index + 1}</span>{" "}
+                  <span className="pill">
+                    {entry.passage_id} · {entry.sentence_id}
+                  </span>{" "}
+                  <span className="sub">
+                    {entry.text.slice(0, 60)}
+                    {entry.text.length > 60 ? "…" : ""}
+                  </span>
+                  <div>{entry.evidence}</div>
+                </li>
+              ))}
+            </ol>
+          )}
         </Dialog>
       )}
 

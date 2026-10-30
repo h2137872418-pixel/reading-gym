@@ -166,10 +166,17 @@ export const ERROR_LABELS: Record<string, string> = {
 };
 
 export const FUNCTION_OPTIONS = [
-  { key: "topic", label: "主题" },
-  { key: "support", label: "支撑" },
-  { key: "example", label: "举例" },
-  { key: "contrast", label: "转折" },
-  { key: "conclusion", label: "结论" },
-  { key: "other", label: "其他" },
+  { key: "topic", label: "主题", hint: "这一段在讲什么" },
+  { key: "claim", label: "观点", hint: "作者的主张、判断或态度" },
+  { key: "definition", label: "定义", hint: "解释一个概念或术语" },
+  { key: "support", label: "支撑", hint: "支撑上文观点或主题" },
+  { key: "example", label: "举例", hint: "用例子说明" },
+  { key: "cause", label: "原因", hint: "解释为什么发生" },
+  { key: "effect", label: "结果", hint: "说明影响或后果" },
+  { key: "contrast", label: "对比", hint: "对比、转折或反差" },
+  { key: "concession", label: "让步", hint: "先承认再转折" },
+  { key: "transition", label: "过渡", hint: "承上启下" },
+  { key: "conclusion", label: "结论", hint: "总结或收束" },
+  { key: "recommendation", label: "建议", hint: "建议、呼吁或行动" },
+  { key: "other", label: "其他", hint: "以上都不是，在依据里说明" },
 ] as const;

@@ -474,22 +474,32 @@ export default function SentenceEditor({
       {mode === "full" && (
         <div className="side">
           <div className="field">
-            <label>句子功能</label>
+            <label>
+              句子功能 <span className="sub">（语篇作用，可多选）</span>
+            </label>
             <div className="chips">
               {FUNCTION_OPTIONS.map((option) => {
-                const on = sentence.functions[0] === option.key;
+                const on = sentence.functions.includes(option.key);
                 return (
                   <button
                     key={option.key}
                     type="button"
+                    title={option.hint}
                     className={`chip ${on ? "on" : ""}`}
-                    onClick={() => onChange({ functions: on ? [] : [option.key] })}
+                    onClick={() =>
+                      onChange({
+                        functions: on
+                          ? sentence.functions.filter((key) => key !== option.key)
+                          : [...sentence.functions, option.key],
+                      })
+                    }
                   >
                     {option.label}
                   </button>
                 );
               })}
             </div>
+            <div className="sub">这是段里的作用，不是主谓宾/从句类型；语法看「从句类型」和「骨架」。</div>
           </div>
 
           <div className="field">
@@ -554,11 +564,13 @@ export default function SentenceEditor({
           </div>
 
           <div className="field">
-            <label>依据 / 疑问</label>
+            <label>
+              依据 / 疑问 <span className="sub">（当前句 {sentence.sentence_id}）</span>
+            </label>
             <textarea
               value={sentence.evidence}
               onChange={(event) => onChange({ evidence: event.target.value })}
-              placeholder="为什么这么切 / 哪里不确定"
+              placeholder={`只记 ${sentence.sentence_id} 的依据/疑问；换句会自动切换`}
             />
           </div>
         </div>
