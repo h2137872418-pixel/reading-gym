@@ -48,6 +48,7 @@ export type SkeletonRow = {
   text: string;
   tokens?: number[];
   tokensAuto?: boolean;
+  predicateToken?: number;
 };
 
 export type LocalSentence = {

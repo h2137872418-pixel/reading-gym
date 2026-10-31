@@ -8,7 +8,7 @@ import type {
   Task,
   TaskPassage,
 } from "../types";
-import { chunkRanges, chunksOf, normalizeCuts } from "./text";
+import { chunkRanges, chunksOf, normalizeCuts, tokenSpans } from "./text";
 import { visibleSkeletonRows } from "./skeleton";
 
 export function emptySentence(
@@ -154,9 +154,20 @@ export function sentenceToAnswer(sentence: LocalSentence): AnswerSentence {
     if (!clauseTypes.includes(value)) clauseTypes.push(value);
   }
 
+  const words = tokenSpans(sentence.text);
   const parts = visibleSkeletonRows(sentence)
     .filter((row) => row.text.trim().length > 0)
-    .map((row) => ({ role: row.role, text: row.text.trim() }));
+    .map((row) => {
+      const predicate =
+        row.predicateToken !== undefined && row.tokens?.includes(row.predicateToken)
+          ? words[row.predicateToken]?.text
+          : undefined;
+      return {
+        role: row.role,
+        text: row.text.trim(),
+        ...(predicate ? { predicate } : {}),
+      };
+    });
 
   return {
     sentence_id: sentence.sentence_id,

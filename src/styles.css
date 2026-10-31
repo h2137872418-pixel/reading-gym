@@ -765,6 +765,15 @@ h2 {
   text-decoration: line-through;
 }
 
+.pick.pred {
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  border-bottom-color: transparent;
+  color: var(--accent);
+}
+
 @media (max-width: 900px) {
   .token-picker {
     padding-left: 0;

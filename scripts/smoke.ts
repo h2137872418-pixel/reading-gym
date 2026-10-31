@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { invariants, parseReview, parseTask, validateAnswer } from "../src/schema";
-import { freezePassage, newSession, progressOf, reconcileSkeleton, toAnswerDoc } from "../src/lib/session";
+import { freezePassage, newSession, progressOf, reconcileSkeleton, sentenceToAnswer, toAnswerDoc } from "../src/lib/session";
 import { visibleSkeletonRows } from "../src/lib/skeleton";
 import { chunkRanges, chunksOf, gapPositions, normalizeProse, toggleCut } from "../src/lib/text";
 import { answerToMarkdown } from "../src/lib/export";
@@ -160,6 +160,29 @@ check(
   JSON.stringify(normalizeProse("a\u00a0b\u200bc")),
 );
 check("纯空白输入为空", normalizeProse(" \n\n\t ").trim() === "");
+
+const predSentence: LocalSentence = {
+  ...oneChunk,
+  chunk_cuts: [],
+  chunk_tags: {},
+  skeleton_rows: [
+    {
+      chunkIndex: null,
+      role: "main",
+      text: "Sarcasm and jazz have",
+      tokens: [0, 1, 2, 3],
+      predicateToken: 3,
+    },
+  ],
+};
+const predAnswer = sentenceToAnswer(predSentence);
+check("谓语导出到 skeleton_parts", predAnswer.skeleton_parts[0]?.predicate === "have", predAnswer.skeleton_parts);
+
+const noPred: LocalSentence = {
+  ...predSentence,
+  skeleton_rows: [{ ...predSentence.skeleton_rows[0], predicateToken: undefined }],
+};
+check("未标谓语时不出 predicate 字段", sentenceToAnswer(noPred).skeleton_parts[0]?.predicate === undefined);
 
 console.log(failures === 0 ? "\n全部通过" : `\n${failures} 项失败`);
 process.exit(failures === 0 ? 0 : 1);

@@ -24,6 +24,7 @@ export const taskSchema = z.object({
 const skeletonPartSchema = z.object({
   role: z.string(),
   text: z.string(),
+  predicate: z.string().optional(),
 });
 
 export const answerSentenceSchema = z.object({

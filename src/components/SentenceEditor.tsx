@@ -328,15 +328,33 @@ export default function SentenceEditor({
     [activeChunk, assign, boundaries, caretIndex, chunkCount, clearChunk, path, moveChunk, phase, toggleCut],
   );
 
-  const toggleToken = (rowIndex: number, tokenIndex: number) => {
+  const cycleToken = (rowIndex: number, tokenIndex: number) => {
     const row = sentence.skeleton_rows[rowIndex];
     const current = row.tokens ?? [];
-    const tokens = current.includes(tokenIndex)
-      ? current.filter((index) => index !== tokenIndex)
-      : [...current, tokenIndex].sort((a, b) => a - b);
+    const included = current.includes(tokenIndex);
+    const isPredicate = row.predicateToken === tokenIndex;
+
+    let tokens = current;
+    let predicateToken: number | undefined = row.predicateToken;
+
+    if (!included) {
+      tokens = [...current, tokenIndex].sort((a, b) => a - b);
+    } else if (!isPredicate) {
+      predicateToken = tokenIndex;
+    } else {
+      tokens = current.filter((index) => index !== tokenIndex);
+      predicateToken = undefined;
+    }
+
     const rows = sentence.skeleton_rows.map((item, i) =>
       i === rowIndex
-        ? { ...item, tokens, text: joinTokens(sentence.text, tokens), tokensAuto: false }
+        ? {
+            ...item,
+            tokens,
+            text: joinTokens(sentence.text, tokens),
+            tokensAuto: false,
+            predicateToken,
+          }
         : item,
     );
     onChange({ skeleton_rows: rows });
@@ -396,7 +414,7 @@ export default function SentenceEditor({
       <div className="hint">
         {phase === "segment" && "← → 移动切点，Space 切 / 取消，Enter 进入标类。这里只切句内意群，不会变成新句子——句子边界在冻结前确定。"}
         {phase === "tag" && "在下面的面板里点选，或按 1/2/3 逐级选。Space 跳过当前块，Enter 去写骨架。"}
-        {phase === "skeleton" && "点词保留 / 去掉（灰色划线就是删掉的词）。Tab 换下一行，Enter 进入下一句。"}
+        {phase === "skeleton" && "点词选入；再点一次标成谓语（加粗下划线）；第三次去掉。Tab 换行，Enter 下一句。"}
       </div>
 
       {phase === "tag" && activeChunk !== null && (
@@ -451,13 +469,15 @@ export default function SentenceEditor({
                 <div className="token-picker">
                   {tokenSpans(sentence.text).map((token, tokenIndex) => {
                     const on = (row.tokens ?? []).includes(tokenIndex);
+                    const isPredicate = row.predicateToken === tokenIndex;
                     return (
                       <button
                         key={token.start}
                         type="button"
                         tabIndex={-1}
-                        className={`pick ${on ? "" : "off"}`}
-                        onClick={() => toggleToken(rowIndex, tokenIndex)}
+                        className={`pick ${on ? "" : "off"} ${isPredicate ? "pred" : ""}`}
+                        onClick={() => cycleToken(rowIndex, tokenIndex)}
+                        title={isPredicate ? "谓语（再点去掉）" : on ? "再点标成谓语" : "点一次选入"}
                       >
                         {token.text}
                       </button>
