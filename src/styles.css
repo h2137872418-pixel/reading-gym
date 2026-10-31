@@ -1268,6 +1268,17 @@ kbd {
   border-color: currentColor;
 }
 
+.chip.muted {
+  color: var(--muted);
+  border-style: dashed;
+}
+
+.clause-hint {
+  border-top: 1px dashed var(--line);
+  padding-top: 8px;
+  font-size: 12px;
+}
+
 
 .head-main {
   display: flex;

@@ -134,9 +134,8 @@ export default function SentenceEditor({
     [onChange, sentence],
   );
 
-  const assign = useCallback(
-    (chunkIndex: number, key: AssignedClauseType) => {
-      applyTags({ ...sentence.chunk_tags, [String(chunkIndex)]: key });
+  const advance = useCallback(
+    (chunkIndex: number) => {
       setPath([]);
       if (chunkIndex + 1 < chunkCount) {
         setActiveChunk(chunkIndex + 1);
@@ -146,7 +145,26 @@ export default function SentenceEditor({
         onPhase("skeleton");
       }
     },
-    [applyTags, chunkCount, sentence.chunk_tags],
+    [chunkCount, onPhase],
+  );
+
+  const assign = useCallback(
+    (chunkIndex: number, key: AssignedClauseType) => {
+      applyTags({ ...sentence.chunk_tags, [String(chunkIndex)]: key });
+      advance(chunkIndex);
+    },
+    [applyTags, advance, sentence.chunk_tags],
+  );
+
+  const skipChunk = useCallback(
+    (chunkIndex: number) => {
+      const tags = { ...sentence.chunk_tags };
+      delete tags[String(chunkIndex)];
+      const next: LocalSentence = { ...sentence, chunk_tags: tags };
+      onChange({ chunk_tags: tags, skeleton_rows: reconcileSkeleton(next) });
+      advance(chunkIndex);
+    },
+    [advance, onChange, sentence],
   );
 
   const clearChunk = useCallback(
@@ -316,6 +334,11 @@ export default function SentenceEditor({
           return;
         }
         if (activeChunk === null) return;
+        if (event.key === "0") {
+          event.preventDefault();
+          skipChunk(activeChunk);
+          return;
+        }
         if (/^[1-9]$/.test(event.key)) {
           event.preventDefault();
           const option = optionsFor(path)[Number(event.key) - 1];
@@ -413,7 +436,7 @@ export default function SentenceEditor({
 
       <div className="hint">
         {phase === "segment" && "← → 移动切点，Space 切 / 取消，Enter 进入标类。这里只切句内意群，不会变成新句子——句子边界在冻结前确定。"}
-        {phase === "tag" && "在下面的面板里点选，或按 1/2/3 逐级选。Space 跳过当前块，Enter 去写骨架。"}
+        {phase === "tag" && "在下面的面板里点选，或按 1/2/3 逐级选；0 = 不是从句，跳过。Enter 去写骨架。"}
         {phase === "skeleton" && "点词选入；再点一次标成谓语（加粗下划线）；第三次去掉。Tab 换行，Enter 下一句。"}
       </div>
 
@@ -426,6 +449,7 @@ export default function SentenceEditor({
           onPick={pickNode}
           onBack={() => setPath((current) => current.slice(0, -1))}
           onClear={() => clearChunk(activeChunk)}
+          onSkip={() => skipChunk(activeChunk)}
         />
       )}
 
