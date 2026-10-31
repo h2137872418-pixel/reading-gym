@@ -4,7 +4,7 @@ import Segmenter from "../components/Segmenter";
 import SentenceEditor, { initialPhase, type Phase } from "../components/SentenceEditor";
 import { Dialog, useToast } from "../components/Toast";
 import { db } from "../db";
-import { downloadJson, downloadText, sessionToMarkdown } from "../lib/export";
+import { downloadJson, downloadText, ensureFileName, recommendedAnswerName, sessionToMarkdown } from "../lib/export";
 import { freezePassage, isStarted, progressOf, toAnswerDoc } from "../lib/session";
 import { invariants, parseReview, validateAnswer } from "../schema";
 import type { LocalSentence, ReviewDoc, SessionDoc, Settings, Task } from "../types";
@@ -37,6 +37,8 @@ export default function Session({ date, passageId }: { date: string; passageId?:
   const [menuOpen, setMenuOpen] = useState(false);
   const [processOpen, setProcessOpen] = useState(false);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportName, setExportName] = useState("");
   const [resetOpen, setResetOpen] = useState(false);
   const reviewInput = useRef<HTMLInputElement>(null);
   const latest = useRef<SessionDoc | null>(null);
@@ -158,7 +160,7 @@ export default function Session({ date, passageId }: { date: string; passageId?:
   );
 
   const exportAnswer = useCallback(
-    (next?: SessionDoc) => {
+    (name?: string, next?: SessionDoc) => {
       const source = next ?? session;
       if (!source) return;
       const doc = toAnswerDoc(source);
@@ -172,11 +174,29 @@ export default function Session({ date, passageId }: { date: string; passageId?:
         toast({ message: `导出校验失败：${problems[0]}` });
         return;
       }
-      downloadJson(`${source.date}.json`, doc);
+      const filename = name ? ensureFileName(name) : recommendedAnswerName(task ?? null, parsed.data);
+      downloadJson(filename, doc);
       return doc;
     },
-    [session, toast],
+    [session, task, toast],
   );
+
+  const openExport = useCallback(() => {
+    if (!session) return;
+    const doc = toAnswerDoc(session);
+    const parsed = validateAnswer(doc);
+    if (!parsed.success) {
+      toast({ message: `导出校验失败：${parsed.error.issues[0]?.message ?? "schema 不匹配"}` });
+      return;
+    }
+    const problems = invariants(parsed.data);
+    if (problems.length > 0) {
+      toast({ message: `导出校验失败：${problems[0]}` });
+      return;
+    }
+    setExportName(recommendedAnswerName(task ?? null, parsed.data));
+    setExportOpen(true);
+  }, [session, task, toast]);
 
   const submit = useCallback(() => {
     if (!session) return;
@@ -190,14 +210,14 @@ export default function Session({ date, passageId }: { date: string; passageId?:
     };
     setSession(next);
     void db.putSession(next);
-    exportAnswer(next);
+    exportAnswer(undefined, next);
     setProcessOpen(false);
     if (settings && !settings.firstSessionDone) {
       const updated = { ...settings, firstSessionDone: true };
       setSettings(updated);
       void db.putSettings(updated);
     }
-    toast({ message: `已导出 v${nextVersion}，把 JSON 拖进 shared/answers/` });
+    toast({ message: `已导出 v${nextVersion}（推荐文件名）；可拖进 shared/answers/，或用「导出 answer」自定义名称` });
   }, [exportAnswer, session, settings, toast]);
 
   const importReview = useCallback(
@@ -221,6 +241,10 @@ export default function Session({ date, passageId }: { date: string; passageId?:
   );
 
   const sentences = passageState?.sentences ?? [];
+  const recommendedName = useMemo(() => {
+    if (!session) return "answer.json";
+    return recommendedAnswerName(task ?? null, toAnswerDoc(session));
+  }, [session, task]);
   const evidenceEntries = useMemo(() => {
     if (!session) return [];
     return session.passages.flatMap((passage) =>
@@ -411,14 +435,16 @@ export default function Session({ date, passageId }: { date: string; passageId?:
             <button type="button" className="btn small ghost" onClick={() => setEvidenceOpen(true)}>
               依据汇总
             </button>
-            <button type="button" className="btn small" onClick={() => exportAnswer()}>
+            <button type="button" className="btn small" onClick={openExport}>
               导出 answer
             </button>
             {task && (
               <button
                 type="button"
                 className="btn small ghost"
-                onClick={() => downloadText(`${session.date}.md`, sessionToMarkdown(task, session))}
+                onClick={() =>
+                  downloadText(recommendedAnswerName(task, toAnswerDoc(session), "md"), sessionToMarkdown(task, session))
+                }
               >
                 导出 md
               </button>
@@ -571,6 +597,36 @@ export default function Session({ date, passageId }: { date: string; passageId?:
           )}
         </div>
       </section>
+
+      {exportOpen && (
+        <Dialog title="导出 answer JSON" onClose={() => setExportOpen(false)}>
+          <div className="sub">
+            推荐名称按「日期 + task_id + 首个 text_id + 版本」生成；可以改成「今天 / 补做」等更好认的名字。
+          </div>
+          <div className="field">
+            <label>文件名</label>
+            <input value={exportName} onChange={(event) => setExportName(event.target.value)} />
+          </div>
+          <div className="sub">
+            推荐：<span className="mono">{recommendedName}</span>；扩展名会自动补 `.json`。
+          </div>
+          <div className="row">
+            <span className="spacer" />
+            <button type="button" className="btn" onClick={() => setExportOpen(false)}>
+              取消
+            </button>
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() => {
+                if (exportAnswer(exportName)) setExportOpen(false);
+              }}
+            >
+              导出
+            </button>
+          </div>
+        </Dialog>
+      )}
 
       {processOpen && (
         <Dialog title="提交前：过程与信心" onClose={() => setProcessOpen(false)}>

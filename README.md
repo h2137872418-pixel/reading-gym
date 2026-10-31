@@ -35,7 +35,7 @@ npm run preview      # http://localhost:4173
 1. **今日** → `导入 task`（或点 `载入示例`），打开 session。
 2. **切句**：点词与词之间加 `¶`，自己判断句子边界；`冻结边界` 生成 `S1、S2…`。
 3. **逐句作答**：`① 切块 → ② 标类 → ③ 骨架`。三个阶段同屏，光标自己往下走。
-4. **导出 answer**：下载 `YYYY-MM-DD.json`，拖进 `shared/answers/`。
+4. **导出 answer**：默认推荐 `YYYY-MM-DD_taskId_textId_vN.json`；导出框里可以改成「今天 / 补做」等自定义名称，再拖进 `shared/answers/`。
 5. **导入批改**：coach 产出 review JSON 后导入，错句直接高亮，可「只看错句」。
 
 ## 贴一段原文就能开始

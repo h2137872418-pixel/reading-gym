@@ -21,6 +21,29 @@ export function downloadText(filename: string, text: string) {
   downloadBlob(filename, new Blob([text], { type: "text/markdown;charset=utf-8" }));
 }
 
+export function sanitizeFileBase(value: string): string {
+  return value
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, "_")
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^[.\s_]+|[.\s_]+$/g, "")
+    .slice(0, 140);
+}
+
+export function recommendedAnswerName(task: Task | null, doc: AnswerDoc, extension = "json"): string {
+  const parts = [doc.date, doc.task_id];
+  const textId = task?.passages?.[0]?.text_id;
+  if (textId && !doc.task_id.includes(textId)) parts.push(textId);
+  parts.push(`v${Math.max(1, doc.version)}`);
+  return `${sanitizeFileBase(parts.join("_"))}.${extension}`;
+}
+
+export function ensureFileName(name: string, extension = "json"): string {
+  const trimmed = name.trim().replace(new RegExp(`\\.${extension}$`, "i"), "");
+  const base = sanitizeFileBase(trimmed) || "answer";
+  return `${base}.${extension}`;
+}
+
 export function answerToMarkdown(task: Task, doc: AnswerDoc): string {
   const lines: string[] = [];
   lines.push(`# Reading Gym 答题 ${doc.date}`);
